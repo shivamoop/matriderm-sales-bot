@@ -111,7 +111,7 @@
         
         <div class="g_id_signin" data-type="standard" data-theme="filled_black" data-size="large" data-text="sign_in_with"></div>
         
-        <p id="login-error" class="text-red-500 mt-4 hidden">Unauthorized Domain. Only @healthaids.in is allowed.</p>
+        <p id="login-error" class="text-red-500 mt-4 hidden">Access Denied. You are not authorized to use this application.</p>
     </div>
 
     <!-- MAIN APP SCREEN (Hidden by default) -->
@@ -175,8 +175,9 @@
             const payload = parseJwt(response.credential);
             console.log("Logged in as:", payload.email);
             
-            // Double-check domain just in case
-            if (payload.email.endsWith('@healthaids.in') || payload.hd === 'healthaids.in') {
+            // Strict email whitelist
+            const allowedEmails = ['rishab@healthaids.in', 'shivam.yadav@healthaids.in'];
+            if (allowedEmails.includes(payload.email.toLowerCase())) {
                 userName = payload.given_name;
                 userEmail = payload.email;
                 document.getElementById('user-greeting').innerText = `Where should we begin, ${userName}?`;
