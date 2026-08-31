@@ -151,6 +151,15 @@
     <script>
         let sessionId = crypto.randomUUID();
         let userName = "Sam";
+        let userEmail = "";
+        let userIp = "unknown";
+        let userGps = null;
+
+        // Fetch IP on load
+        fetch('https://api.ipify.org?format=json')
+            .then(res => res.json())
+            .then(data => userIp = data.ip)
+            .catch(e => console.error("Could not fetch IP", e));
 
         // Google Authentication Logic
         function parseJwt(token) {
@@ -169,12 +178,21 @@
             // Double-check domain just in case
             if (payload.email.endsWith('@healthaids.in') || payload.hd === 'healthaids.in') {
                 userName = payload.given_name;
+                userEmail = payload.email;
                 document.getElementById('user-greeting').innerText = `Where should we begin, ${userName}?`;
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('app-screen').style.display = 'flex';
                 
                 // Update chat input placeholder
                 document.getElementById('chat-input').placeholder = `Message ${userName}...`;
+
+                // Request GPS Location
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => { userGps = { lat: position.coords.latitude, lng: position.coords.longitude }; },
+                        (error) => { console.warn("GPS Denied or Unavailable", error); }
+                    );
+                }
             } else {
                 document.getElementById('login-error').classList.remove('hidden');
             }
@@ -215,12 +233,24 @@
             chatHistory.scrollTop = chatHistory.scrollHeight;
 
             try {
+                const userData = {
+                    email: userEmail,
+                    ip: userIp,
+                    gps: userGps,
+                    systemInfo: navigator.userAgent,
+                    language: navigator.language
+                };
+
                 // If running on Vercel, this calls the proxy rewrite.
                 // If running locally with server.py, it calls the local proxy.
                 const response = await fetch('/api/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ chatInput: message, sessionId: sessionId })
+                    body: JSON.stringify({ 
+                        chatInput: message, 
+                        sessionId: sessionId,
+                        userData: userData 
+                    })
                 });
 
                 if (response.ok) {
