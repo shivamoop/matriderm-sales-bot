@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/chat",
+      "destination": "https://laurel-fraternal-subsonic.ngrok-free.dev/webhook/chat"
+    }
+  ]
+}
